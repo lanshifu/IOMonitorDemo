@@ -21,8 +21,6 @@ import android.util.Log;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.ListIterator;
 
 
 public class IOCloseLeakDetector implements InvocationHandler {
@@ -50,7 +48,7 @@ public class IOCloseLeakDetector implements InvocationHandler {
             Throwable throwable = (Throwable) args[1];
 
             String stack = stackTraceToString(throwable.getStackTrace());
-            Log.e(TAG, "report,stack= " + stack );
+            Log.e(TAG, "io流没关闭，stack= \n\r" + stack );
             return null;
         }
         return method.invoke(originalReporter, args);
@@ -61,35 +59,9 @@ public class IOCloseLeakDetector implements InvocationHandler {
             return "";
         }
 
-        ArrayList<StackTraceElement> stacks = new ArrayList<>(arr.length);
-        for (int i = 0; i < arr.length; i++) {
-            String className = arr[i].getClassName();
-            // 过滤一些无用的堆栈
-            if (className.contains("libcore.io")
-                    || className.contains("com.tencent.matrix.iocanary")
-                    || className.contains("java.io")
-                    || className.contains("dalvik.system")
-                    || className.contains("android.os")) {
-                continue;
-            }
-
-            stacks.add(arr[i]);
-        }
-        // stack still too large
-        if (stacks.size() > DEFAULT_MAX_STACK_LAYER) {
-            ListIterator<StackTraceElement> iterator = stacks.listIterator(stacks.size());
-            // from backward to forward
-            while (iterator.hasPrevious()) {
-                StackTraceElement stack = iterator.previous();
-                String className = stack.getClassName();
-
-                if (stacks.size() <= DEFAULT_MAX_STACK_LAYER) {
-                    break;
-                }
-            }
-        }
-        StringBuffer sb = new StringBuffer(stacks.size());
-        for (StackTraceElement stackTraceElement : stacks) {
+        StringBuffer sb = new StringBuffer();
+        for (StackTraceElement stackTraceElement : arr) {
+            String className = stackTraceElement.getClassName();
             sb.append(stackTraceElement).append('\n');
         }
         return sb.toString();

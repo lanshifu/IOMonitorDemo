@@ -1,6 +1,8 @@
 package com.lanshifu.iomonitordemo
 
 import android.annotation.SuppressLint
+import android.util.Log
+import java.io.*
 import java.lang.reflect.Proxy
 
 /**
@@ -13,6 +15,14 @@ object IOMonitor {
      * 模拟器文件没关闭
      */
     fun testInputStreamNeverClose() {
+
+        val f = File("/data/data/com.lanshifu.iomonitordemo/hello.text")
+        if (!f.exists()) {
+            f.createNewFile()
+        }
+
+        val r = FileReader(f)
+//        r.close()
 
     }
 
@@ -31,6 +41,10 @@ object IOMonitor {
         try {
             val closeGuardCls = Class.forName("dalvik.system.CloseGuard")
             val closeGuardReporterCls = Class.forName("dalvik.system.CloseGuard\$Reporter")
+            closeGuardCls.declaredMethods.forEach {
+                Log.d("TAG", "tryHook: ${it.name}")
+            }
+            // 非公开API
             val methodGetReporter = closeGuardCls.getDeclaredMethod("getReporter")
             val methodSetReporter =
                 closeGuardCls.getDeclaredMethod("setReporter", closeGuardReporterCls)

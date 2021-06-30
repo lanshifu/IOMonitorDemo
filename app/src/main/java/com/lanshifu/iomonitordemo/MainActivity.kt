@@ -15,6 +15,8 @@ class MainActivity : AppCompatActivity() {
         IOMonitor.start()
 
         IOMonitor.testInputStreamNeverClose()
+
+        Runtime.getRuntime().gc()
     }
 
     /**
