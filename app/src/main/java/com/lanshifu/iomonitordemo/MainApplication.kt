@@ -10,8 +10,13 @@ import me.weishu.reflection.Reflection
  */
 class MainApplication : Application() {
 
+    companion object {
+        var context:Context? = null
+    }
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
         Reflection.unseal(base)
+
+        context = base
     }
 }

@@ -14,7 +14,9 @@ class MainActivity : AppCompatActivity() {
 
         IOMonitor.start()
 
+        doHook()
         IOMonitor.testInputStreamNeverClose()
+
 
         Runtime.getRuntime().gc()
     }
@@ -24,6 +26,8 @@ class MainActivity : AppCompatActivity() {
      * which is packaged with this application.
      */
     external fun stringFromJNI(): String
+
+    external fun doHook()
 
     companion object {
         // Used to load the 'native-lib' library on application startup.

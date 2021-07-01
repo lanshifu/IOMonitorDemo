@@ -11,17 +11,22 @@ import java.lang.reflect.Proxy
  */
 object IOMonitor {
 
+    val TAG = "IOMonitor"
     /**
      * 模拟器文件没关闭
      */
     fun testInputStreamNeverClose() {
 
-        val f = File("/data/data/com.lanshifu.iomonitordemo/hello.text")
+        val dir :String= MainApplication.context?.externalCacheDir?.absolutePath ?: ""
+        val f = File(dir,"log.txt")
         if (!f.exists()) {
             f.createNewFile()
+            f.writeText("log")
         }
 
         val r = FileReader(f)
+        val read = r.read()
+        Log.d(TAG, "read=$read")
 //        r.close()
 
 
