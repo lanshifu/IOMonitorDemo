@@ -2,6 +2,7 @@ package com.lanshifu.iomonitordemo
 
 import android.app.Application
 import android.content.Context
+import com.lanshifu.iomonitordemo.matrix.MatrixInit
 import me.weishu.reflection.Reflection
 
 /**
@@ -19,4 +20,15 @@ class MainApplication : Application() {
 
         context = base
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        initMatrix()
+    }
+
+    private fun initMatrix() {
+        MatrixInit.init(this)
+    }
+
+
 }
