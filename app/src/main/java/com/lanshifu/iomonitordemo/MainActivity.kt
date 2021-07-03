@@ -11,14 +11,16 @@ class MainActivity : AppCompatActivity() {
 
         // Example of a call to a native method
         findViewById<TextView>(R.id.sample_text).text = stringFromJNI()
+        findViewById<TextView>(R.id.btnGc).setOnClickListener {
+            //手动触发gc，Class对象的 finalize 会被调用
+            Runtime.getRuntime().gc()
+        }
 
         IOMonitor.start()
-
         doHook()
+
         IOMonitor.testInputStreamNeverClose()
 
-
-        Runtime.getRuntime().gc()
     }
 
     /**

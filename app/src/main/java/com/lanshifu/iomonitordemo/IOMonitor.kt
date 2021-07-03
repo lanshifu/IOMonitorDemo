@@ -21,8 +21,9 @@ object IOMonitor {
         val f = File(dir,"log.txt")
         if (!f.exists()) {
             f.createNewFile()
-            f.writeText("log")
         }
+        f.writeText("text1")
+        f.writeText(this.javaClass.name)
 
         val r = FileReader(f)
         val read = r.read()
@@ -33,7 +34,7 @@ object IOMonitor {
     }
 
     fun start() {
-        tryHook()
+        tryHookCloseGuard()
     }
 
     /**
@@ -43,7 +44,7 @@ object IOMonitor {
      * @return
      */
     @SuppressLint("SoonBlockedPrivateApi")
-    private fun tryHook(): Boolean {
+    private fun tryHookCloseGuard(): Boolean {
         try {
             val closeGuardCls = Class.forName("dalvik.system.CloseGuard")
             val closeGuardReporterCls = Class.forName("dalvik.system.CloseGuard\$Reporter")
