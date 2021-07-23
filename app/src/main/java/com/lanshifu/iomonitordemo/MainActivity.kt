@@ -15,12 +15,25 @@ class MainActivity : AppCompatActivity() {
             //手动触发gc，Class对象的 finalize 会被调用
             Runtime.getRuntime().gc()
         }
+        findViewById<TextView>(R.id.btnBlock).setOnClickListener {
+            //手动触发gc，Class对象的 finalize 会被调用
+            testBlock()
+        }
+
+        findViewById<TextView>(R.id.btnRead).setOnClickListener {
+            IOMonitor.testFileInputStream()
+        }
 
         IOMonitor.start()
         doHook()
 
-        IOMonitor.testInputStreamNeverClose()
+//        IOMonitor.testInputStreamNeverClose()
 
+
+    }
+
+    private fun testBlock() {
+        Thread.sleep(5000)
     }
 
     /**
