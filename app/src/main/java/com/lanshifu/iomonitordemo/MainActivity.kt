@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     var mmapDemo = MmapDemo()
+    var i= 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.btnmmapWrite).setOnClickListener {
-            mmapDemo.mmapMapWrite("哈哈哈")
+            mmapDemo.mmapMapWrite("${i++}")
         }
 
         IOMonitor.start()
@@ -42,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun testBlock() {
-        Thread.sleep(5000)
+        Thread.sleep(10000)
     }
 
     /**

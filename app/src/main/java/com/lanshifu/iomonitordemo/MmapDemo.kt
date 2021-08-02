@@ -26,8 +26,6 @@ class MmapDemo {
         mContext = context
         defaultBufferPath = getDefaultBufferPath(mContext!!);
         initNative(defaultBufferPath!!, 4096, defaultBufferPath!!);
-
-        writeNative(0L,"你好")
     }
 
     fun mmapMapWrite(text:String){
