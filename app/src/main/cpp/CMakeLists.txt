@@ -24,6 +24,13 @@ add_library(
         xh_version.c
 )
 
+add_library(
+        mmap-lib
+
+        SHARED
+
+        mmap_demo.cpp
+)
 
 find_library(
         log-lib
@@ -31,5 +38,10 @@ find_library(
 
 target_link_libraries(
         native-lib
+
+        ${log-lib})
+
+target_link_libraries(
+        mmap-lib
 
         ${log-lib})

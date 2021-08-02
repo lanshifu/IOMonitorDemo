@@ -5,6 +5,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
+
+    var mmapDemo = MmapDemo()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -24,11 +27,17 @@ class MainActivity : AppCompatActivity() {
             IOMonitor.testFileInputStream()
         }
 
+        findViewById<TextView>(R.id.btnmmapWrite).setOnClickListener {
+            mmapDemo.mmapMapWrite("哈哈哈")
+        }
+
         IOMonitor.start()
         doHook()
 
 //        IOMonitor.testInputStreamNeverClose()
 
+
+        mmapDemo.init(this)
 
     }
 
