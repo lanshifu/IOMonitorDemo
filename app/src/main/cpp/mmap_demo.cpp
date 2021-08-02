@@ -12,7 +12,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#define TAG    "myhello-jni-test" // 这个是自定义的LOG的标识
+#define TAG    "mmap_demo" // 这个是自定义的LOG的标识
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型
 
 char *write_ptr = nullptr;
@@ -29,7 +29,7 @@ Java_com_lanshifu_iomonitordemo_MmapDemo_initNative(JNIEnv *env, jobject instanc
     env->ReleaseStringUTFChars(buffer_path_, buffer_path);
     env->ReleaseStringUTFChars(log_path_, log_path);
     write_ptr = buffer_ptr;
-    LOGD("write_ptr=%s",write_ptr);
+    LOGD("initNative，write_ptr=%s",write_ptr);
     return reinterpret_cast<long>(buffer_ptr);
 }
 
