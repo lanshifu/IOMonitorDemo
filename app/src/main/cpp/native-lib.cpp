@@ -15,6 +15,14 @@ static ssize_t (*original_write) (int fd, const void *buf, size_t size);
 static ssize_t (*original_write_chk) (int fd, const void* buf, size_t count, size_t buf_size);
 static int (*original_close) (int fd);
 
+static bool kInitSuc = false;
+static JavaVM *kJvm;
+
+static jclass kJavaBridgeClass;
+static jclass kJavaContextClass;
+static jmethodID kMethodIDGetJavaContext;
+static jfieldID kFieldIDStack;
+static jfieldID kFieldIDThreadName;
 
 //需要hook的库
 const static char *TARGET_MODULES[] = {
@@ -24,15 +32,106 @@ const static char *TARGET_MODULES[] = {
 };
 const static size_t TARGET_MODULE_COUNT = sizeof(TARGET_MODULES) / sizeof(char *);
 
+char *jstringToChars(JNIEnv *env, jstring jstr) {
+    if (jstr == nullptr) {
+        return nullptr;
+    }
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_lanshifu_iomonitordemo_MainActivity_stringFromJNI(
-        JNIEnv *env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-
-    return env->NewStringUTF(hello.c_str());
+    jboolean isCopy = JNI_FALSE;
+    const char *str = env->GetStringUTFChars(jstr, &isCopy);
+    char *ret = strdup(str);
+    env->ReleaseStringUTFChars(jstr, str);
+    return ret;
 }
+
+void printStack(){
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "printStack");
+    JNIEnv* env = NULL;
+    kJvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (env == NULL || !kInitSuc) {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "ProxyOpen env null or kInitSuc:%d", kInitSuc);
+    } else {
+
+        jobject java_context_obj = env->CallStaticObjectMethod(kJavaBridgeClass, kMethodIDGetJavaContext);
+        if (NULL == java_context_obj) {
+            return;
+        }
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "CallStaticObjectMethod end");
+        jstring j_stack = (jstring) env->GetObjectField(java_context_obj, kFieldIDStack);
+        jstring j_thread_name = (jstring) env->GetObjectField(java_context_obj, kFieldIDThreadName);
+
+        char* thread_name = jstringToChars(env, j_thread_name);
+        char* stack = jstringToChars(env, j_stack);
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "printStack...");
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "thread_name=%s",thread_name);
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "stack=%s",stack);
+
+//        JavaContext java_context(GetCurrentThreadId(), thread_name == NULL ? "" : thread_name, stack == NULL ? "" : stack);
+        free(stack);
+        free(thread_name);
+
+
+        env->DeleteLocalRef(java_context_obj);
+        env->DeleteLocalRef(j_stack);
+        env->DeleteLocalRef(j_thread_name);
+    }
+}
+
+static bool InitJIniEnvn(JavaVM *vm) {
+    kJvm = vm;
+    JNIEnv* env = NULL;
+    if (kJvm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK){
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv GetEnv !JNI_OK");
+        return false;
+    }
+
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "InitJniEnv1");
+    jclass temp_cls = env->FindClass("com/lanshifu/iomonitordemo/IOCanaryJniBridge");
+    if (temp_cls == NULL)  {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kJavaBridgeClass NULL");
+        return false;
+    }
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "InitJniEnv2");
+    kJavaBridgeClass = reinterpret_cast<jclass>(env->NewGlobalRef(temp_cls));
+
+    jclass temp_java_context_cls = env->FindClass("com/lanshifu/iomonitordemo/IOCanaryJniBridge$JavaContext");
+    if (temp_java_context_cls == NULL)  {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kJavaBridgeClass NULL");
+        return false;
+    }
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "InitJniEnv3");
+    kJavaContextClass = reinterpret_cast<jclass>(env->NewGlobalRef(temp_java_context_cls));
+    kFieldIDStack = env->GetFieldID(kJavaContextClass, "stack", "Ljava/lang/String;");
+    kFieldIDThreadName = env->GetFieldID(kJavaContextClass, "threadName", "Ljava/lang/String;");
+    if (kFieldIDStack == NULL || kFieldIDThreadName == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kJavaContextClass field NULL");
+        return false;
+    }
+
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "InitJniEnv4");
+    kMethodIDGetJavaContext = env->GetStaticMethodID(kJavaBridgeClass, "getJavaContext", "()Lcom/lanshifu/iomonitordemo/IOCanaryJniBridge$JavaContext;");
+    if (kMethodIDGetJavaContext == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kMethodIDGetJavaContext NULL");
+        return false;
+    }
+
+    return true;
+}
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved){
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "JNI_OnLoad");
+    kInitSuc = false;
+
+
+    if (!InitJIniEnvn(vm)) {
+        return -1;
+    }
+
+    kInitSuc = true;
+    __android_log_print(ANDROID_LOG_DEBUG, kTag, "JNI_OnLoad done");
+    return JNI_VERSION_1_6;
+}
+
 
 int64_t GetTickCountMicros() {
     struct timespec ts;
@@ -50,9 +149,9 @@ int64_t GetTickCountMicros() {
 int ProxyOpen(const char *pathname, int flags, mode_t mode) {
     __android_log_print(ANDROID_LOG_INFO, kTag, "ProxyOpen start,name=%s",pathname);
     int ret = original_open(pathname, flags, mode);
-    //todo 获取线程堆栈
     if (ret != -1) {
-
+        //todo 获取线程堆栈
+        printStack();
     }
     //调用
     return ret;
@@ -63,7 +162,7 @@ int ProxyOpen64(const char *pathname, int flags, mode_t mode) {
     int ret = original_open64(pathname, flags, mode);
     //todo 获取线程堆栈
     if (ret != -1) {
-
+        printStack();
     }
     return ret;
 }
@@ -116,7 +215,7 @@ int ProxyClose(int fd) {
 
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_lanshifu_iomonitordemo_MainActivity_doHook(JNIEnv *env, jobject thiz) {
+Java_com_lanshifu_iomonitordemo_IOMonitor_doHook(JNIEnv *env, jobject thiz) {
 
 
     //1、打开xhook日志

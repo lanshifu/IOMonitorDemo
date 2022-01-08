@@ -3,11 +3,14 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.18.1)
 
 project("iomonitordemo")
 
 SET(TARGET iomonitordemo)
+
+# import bytehook from maven
+find_package(bytehook REQUIRED CONFIG)
 
 add_library(
         native-lib
@@ -32,6 +35,14 @@ add_library(
         mmap_demo.cpp
 )
 
+add_library(
+        bhook-lib
+
+        SHARED
+
+        bhook_demo.cpp
+)
+
 find_library(
         log-lib
         log)
@@ -45,3 +56,9 @@ target_link_libraries(
         mmap-lib
 
         ${log-lib})
+
+#target_link_libraries(
+#        bhook-lib
+#        bytehook
+#        ${log-lib})
+target_link_libraries(bhook-lib bytehook::bytehook ${log-lib})

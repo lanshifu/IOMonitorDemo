@@ -15,14 +15,14 @@
 #define TAG    "mmap_demo" // 这个是自定义的LOG的标识
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型
 
-char *write_ptr = nullptr;
+char *write_ptr = NULL;
 
 static char *openMMap(int buffer_fd, size_t buffer_size);
 
 extern "C"  jlong
 Java_com_lanshifu_iomonitordemo_MmapDemo_initNative(JNIEnv *env, jobject instance, jstring buffer_path_, jint capacity, jstring log_path_) {
-    const char *buffer_path = env->GetStringUTFChars(buffer_path_, nullptr);
-    const char *log_path = env->GetStringUTFChars(log_path_, nullptr);
+    const char *buffer_path = env->GetStringUTFChars(buffer_path_, NULL);
+    const char *log_path = env->GetStringUTFChars(log_path_, NULL);
     size_t buffer_size = static_cast<size_t>(capacity);
     //1.打开文件，获得句柄
     int buffer_fd = open(buffer_path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -36,7 +36,7 @@ Java_com_lanshifu_iomonitordemo_MmapDemo_initNative(JNIEnv *env, jobject instanc
 }
 
 static char *openMMap(int buffer_fd, size_t buffer_size) {
-    char *map_ptr = nullptr;
+    char *map_ptr = NULL;
     if (buffer_fd != -1) {
         // 根据 buffer size 调整 buffer 文件大小，ftruncate会将参数fd指定的文件大小改为参数length指定的大小
         ftruncate(buffer_fd, static_cast<int>(buffer_size));
@@ -44,7 +44,7 @@ static char *openMMap(int buffer_fd, size_t buffer_size) {
         lseek(buffer_fd, 0, SEEK_SET);
         map_ptr = (char *) mmap(0, buffer_size, PROT_WRITE | PROT_READ, MAP_SHARED, buffer_fd, 0);
         if (map_ptr == MAP_FAILED) {
-            map_ptr = nullptr;
+            map_ptr = NULL;
         }
     }
     return map_ptr;

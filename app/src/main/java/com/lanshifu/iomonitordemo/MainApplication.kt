@@ -23,7 +23,9 @@ class MainApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        initMatrix()
+//        initMatrix()
+
+//        BHookSdk.init()
     }
 
     private fun initMatrix() {

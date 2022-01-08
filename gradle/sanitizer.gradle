@@ -1,0 +1,15 @@
+project.afterEvaluate {
+
+    preBuild.doFirst {
+        def projectDir = project.projectDir.toString()
+
+        delete projectDir + '/src/main/resources/'
+        delete projectDir + '/src/main/jniLibs/'
+    }
+}
+
+clean.doFirst {
+    def projectDir = project.projectDir.toString()
+    delete projectDir + '/src/main/resources/'
+    delete projectDir + '/src/main/jniLibs/'
+}

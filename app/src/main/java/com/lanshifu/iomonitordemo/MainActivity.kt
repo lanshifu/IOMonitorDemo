@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     var mmapDemo = MmapDemo()
+    var ioMonitor = IOMonitor()
     var i= 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,7 +15,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // Example of a call to a native method
-        findViewById<TextView>(R.id.sample_text).text = stringFromJNI()
         findViewById<TextView>(R.id.btnGc).setOnClickListener {
             //手动触发gc，Class对象的 finalize 会被调用
             Runtime.getRuntime().gc()
@@ -25,15 +25,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.btnRead).setOnClickListener {
-            IOMonitor.testFileInputStream()
+            for (i in 1 .. 1025){
+
+                CloseGuardHooker.testInputStreamNeverClose()
+            }
+//            IOMonitor.testFileInputStream()
         }
 
         findViewById<TextView>(R.id.btnmmapWrite).setOnClickListener {
             mmapDemo.mmapMapWrite("${i++}")
         }
 
-        IOMonitor.start()
-        doHook()
+        CloseGuardHooker.start()
+        ioMonitor.doHook()
 
 //        IOMonitor.testInputStreamNeverClose()
 
@@ -46,18 +50,4 @@ class MainActivity : AppCompatActivity() {
         Thread.sleep(10000)
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    external fun stringFromJNI(): String
-
-    external fun doHook()
-
-    companion object {
-        // Used to load the 'native-lib' library on application startup.
-        init {
-            System.loadLibrary("native-lib")
-        }
-    }
 }
