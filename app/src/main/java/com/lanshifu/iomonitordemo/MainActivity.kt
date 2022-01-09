@@ -25,10 +25,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.btnRead).setOnClickListener {
-            for (i in 1 .. 1025){
-
-                CloseGuardHooker.testInputStreamNeverClose()
-            }
+            CloseGuardHooker.testInputStreamNeverClose()
 //            IOMonitor.testFileInputStream()
         }
 
